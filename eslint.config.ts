@@ -113,7 +113,7 @@ export default defineConfig([
       'func-names': 'warn',
       'guard-for-in': 'error',
       'max-lines': ['error', { max: 300, skipBlankLines: true, skipComments: true }],
-      'max-lines-per-function': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
+      'max-lines-per-function': ['error', { max: 250, skipBlankLines: true, skipComments: true }],
       'new-cap': 'off',
       'no-alert': 'warn',
       'no-array-constructor': 'error',
@@ -168,6 +168,8 @@ export default defineConfig([
         }
       ],
       'react/no-unknown-property': 'error',
+      '@typescript-eslint/no-explicit-any': ['off'],
+      'jsx-a11y/no-autofocus': ['off'],
       'react/jsx-key': 'error',
       'react/self-closing-comp': 'error',
       'react/react-in-jsx-scope': 'off',

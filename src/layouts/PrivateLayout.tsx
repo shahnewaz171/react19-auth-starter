@@ -1,20 +1,33 @@
-import { Outlet } from 'react-router';
+import { Suspense } from 'react';
+import { Navigate, Outlet } from 'react-router';
+import { useUser } from '@clerk/clerk-react';
 
+import { AppInitialLoading } from '@/components/loader';
+import AppTopBar from '@/layouts/AppTopBar';
 import Footer from '@/layouts/Footer';
-import Navbar from '@/layouts/Navbar';
 
-const PrivateLayout = () => (
-  <div className="min-h-screen flex flex-col">
-    {/* navbar */}
-    <Navbar />
+const PrivateLayout = () => {
+  const { isSignedIn, isLoaded } = useUser();
 
-    <main className="flex-grow container mx-auto p-4">
-      {/* child routes render here */}
-      <Outlet />
-    </main>
+  if (!isLoaded) return <AppInitialLoading />;
 
-    <Footer />
-  </div>
-);
+  if (!isSignedIn) return <Navigate to="/login" replace />;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* top bar */}
+      <AppTopBar />
+
+      <main className="grow p-4">
+        {/* child routes render here */}
+        <Suspense fallback={<AppInitialLoading />}>
+          <Outlet />
+        </Suspense>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
 
 export default PrivateLayout;

@@ -1,22 +1,34 @@
-import { Outlet } from 'react-router';
+import { Suspense } from 'react';
+import { Navigate, Outlet } from 'react-router';
+import { useUser } from '@clerk/clerk-react';
+
+import { AppInitialLoading } from '@/components/loader';
 
 import Footer from '@/layouts/Footer';
+import Navbar from '@/layouts/Navbar';
 
-const PublicLayout = () => (
-  <div className="min-h-screen flex flex-col">
-    <header className="bg-blue-600 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-bold">React 19 Boilerplate</h1>
-      </div>
-    </header>
+const PublicLayout = () => {
+  const { isSignedIn, isLoaded } = useUser();
 
-    <main className="flex-grow container mx-auto p-4">
-      {/* child routes render here */}
-      <Outlet />
-    </main>
+  if (!isLoaded) return <AppInitialLoading />;
 
-    <Footer />
-  </div>
-);
+  if (isSignedIn) return <Navigate to="/" replace />;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* navbar */}
+      <Navbar />
+
+      <main className="grow p-4">
+        {/* child routes render here */}
+        <Suspense fallback={<AppInitialLoading />}>
+          <Outlet />
+        </Suspense>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
 
 export default PublicLayout;

@@ -1,1 +1,1 @@
-export const API_BASE_URL: string | undefined = process.env.REACT_APP_API_BASE_URL;
+export const VITE_CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;

@@ -1,48 +1,37 @@
-import type { ButtonHTMLAttributes, DetailedHTMLProps, ReactNode } from 'react';
-import { cn } from '@/utils';
+import { Button as MuiButton, type ButtonProps as MuiButtonProps } from '@mui/material';
+import { type VariantProps, cva } from 'class-variance-authority';
 
-const variantClasses = {
-  primary: 'bg-blue-600 hover:bg-blue-700',
-  secondary: 'bg-gray-600 hover:bg-gray-700'
-};
+import cn from '@/utils/cn';
 
-const baseClasses =
-  'inline-flex items-center justify-center px-4 py-2 rounded text-white font-semibold transition';
+const buttonVariants = cva('', {
+  variants: {
+    customVariant: {
+      gradient: 'bg-gradient-to-r from-blue-600 to-purple-600 text-white',
+      glass: 'backdrop-blur-sm bg-white/10 border border-white/20'
+    }
+  },
+  defaultVariants: {
+    customVariant: undefined
+  }
+});
 
-interface ButtonProps
-  extends DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement> {
-  children: ReactNode;
-  type?: 'button' | 'submit' | 'reset';
-  variant?: keyof typeof variantClasses;
-  className?: string;
-  onClick?: () => void;
-  disabled?: boolean;
+export interface ButtonProps extends MuiButtonProps, VariantProps<typeof buttonVariants> {
+  customVariant?: 'gradient' | 'glass';
 }
 
-const Button = ({
-  children,
-  type = 'button',
-  variant = 'primary',
-  className = '',
-  onClick,
-  disabled,
+export function Button({
+  className,
+  customVariant,
+  variant = 'contained',
+  color = 'primary',
   ...props
-}: ButtonProps) => (
-  <button
-    type={type}
-    onClick={onClick}
-    disabled={disabled}
-    aria-disabled={disabled}
-    className={cn(
-      baseClasses,
-      variantClasses[variant],
-      disabled && 'opacity-50 cursor-not-allowed',
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </button>
-);
-
-export default Button;
+}: ButtonProps) {
+  return (
+    <MuiButton
+      variant={variant}
+      color={color}
+      className={cn(buttonVariants({ customVariant }), className)}
+      {...props}
+    />
+  );
+}

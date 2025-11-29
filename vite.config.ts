@@ -24,6 +24,18 @@ export default defineConfig({
     }
   },
   build: {
-    sourcemap: true
+    sourcemap: true,
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router'],
+          'mui-core': ['@mui/material', '@emotion/react', '@emotion/styled'],
+          'mui-icons': ['@mui/icons-material'],
+          'form-libs': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'auth-libs': ['@clerk/clerk-react']
+        }
+      }
+    }
   }
 });

@@ -1,58 +1,39 @@
-import { memo, type DetailedHTMLProps, type InputHTMLAttributes } from 'react';
-import { cn } from '@/utils';
+import { TextField, type TextFieldProps } from '@mui/material';
+import { type VariantProps, cva } from 'class-variance-authority';
 
-interface InputProps
-  extends DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> {
-  label?: string;
-  name: string;
-  value: string;
-  className?: string;
-  onChange?: () => void;
-  error?: string;
-  type?: string;
-  disabled?: boolean;
+import cn from '@/utils/cn';
+
+const inputVariants = cva('', {
+  variants: {
+    inputSize: {
+      small: 'text-sm',
+      medium: '',
+      large: 'text-lg'
+    }
+  },
+  defaultVariants: {
+    inputSize: 'medium'
+  }
+});
+
+export interface InputProps
+  extends Omit<TextFieldProps, 'size'>, VariantProps<typeof inputVariants> {
+  inputSize?: 'small' | 'medium' | 'large';
 }
 
-const Input = ({
-  label,
-  name,
-  value,
-  className = '',
-  onChange,
-  error,
-  type = 'text',
-  disabled = false,
-  ...props
-}: InputProps) => (
-  <div className={cn('mb-4', className)}>
-    {label && (
-      <label htmlFor={name} className="block font-semibold mb-1">
-        {label}
-      </label>
-    )}
+const Input = ({ className, inputSize = 'medium', error, helperText, ...props }: InputProps) => {
+  const muiSize = inputSize === 'large' ? 'medium' : inputSize;
 
-    <input
-      id={name}
-      name={name}
-      value={value}
-      onChange={onChange}
-      type={type}
-      disabled={disabled}
-      aria-invalid={!!error}
-      aria-describedby={error ? `${name}-error` : undefined}
-      className={cn(
-        'w-full border px-3 py-2 rounded outline-none transition',
-        error && 'border-red-500'
-      )}
+  return (
+    <TextField
+      size={muiSize}
+      error={error}
+      helperText={helperText}
+      className={cn(inputVariants({ inputSize }), className)}
+      fullWidth
       {...props}
     />
+  );
+};
 
-    {error && (
-      <p id={`${name}-error`} className="text-red-500 text-sm mt-1">
-        {error}
-      </p>
-    )}
-  </div>
-);
-
-export default memo(Input);
+export { Input, inputVariants };

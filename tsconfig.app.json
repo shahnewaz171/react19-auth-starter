@@ -6,6 +6,7 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "types": ["vite/client"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -29,5 +30,5 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "types.d.ts"]
+  "include": ["src", "types.d.ts", "public/otpTimerWorker.js"]
 }
