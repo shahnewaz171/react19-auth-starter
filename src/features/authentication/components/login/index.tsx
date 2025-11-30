@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Card, CardContent, Link, Stack, Typography } from '@mui/material';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link as RouterLink, useNavigate } from 'react-router';
 import { z } from 'zod';
@@ -18,7 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const navigate = useNavigate();
 
   const {
@@ -30,33 +30,30 @@ const Login = () => {
   });
 
   const { isLoaded, signIn, setActive } = useSignIn();
-
-  const onSubmit = async (data: LoginFormData) => {
-    if (!isLoaded) return;
+  const onSubmit = (data: LoginFormData) => {
+    if (!isLoaded || isPending) return;
 
     setError(null);
 
-    try {
-      setIsLoading(true);
+    startTransition(async () => {
+      try {
+        const result = await signIn.create({
+          identifier: data.email,
+          password: data.password
+        });
 
-      const result = await signIn.create({
-        identifier: data.email,
-        password: data.password
-      });
-
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-        navigate('/', { replace: true });
-      } else {
-        console.error(JSON.stringify(result, null, 2));
+        if (result.status === 'complete') {
+          await setActive({ session: result.createdSessionId });
+          navigate('/', { replace: true });
+        } else {
+          console.error(JSON.stringify(result, null, 2));
+        }
+      } catch (err: any) {
+        setError(
+          err.message || err?.errors[0]?.long_message || 'Failed to sign in. Please try again.'
+        );
       }
-    } catch (err: any) {
-      setError(
-        err.message || err?.errors[0]?.long_message || 'Failed to sign in. Please try again.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   return (
@@ -105,8 +102,8 @@ const Login = () => {
                 {...register('password')}
               />
 
-              <Button type="submit" fullWidth size="large" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign In'}
+              <Button type="submit" fullWidth size="large" disabled={isPending}>
+                {isPending ? 'Signing in...' : 'Sign In'}
               </Button>
             </Stack>
           </form>

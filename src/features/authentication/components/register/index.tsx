@@ -1,4 +1,4 @@
-import { Activity, useState } from 'react';
+import { Activity, useState, useTransition } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Card, CardContent, Link, Stack, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -30,8 +30,8 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [isPendingVerification, setIsPendingVerification] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   const { isLoaded, signUp } = useSignUp();
 
@@ -45,34 +45,32 @@ const Register = () => {
     resolver: zodResolver(registerSchema)
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    if (!isLoaded) return;
+  const onSubmit = (data: RegisterFormData) => {
+    if (!isLoaded || isPending) return;
 
     setError(null);
 
-    try {
-      setIsLoading(true);
+    startTransition(async () => {
+      try {
+        await signUp?.create({
+          emailAddress: data.email,
+          password: data.password,
+          firstName: data.firstName,
+          lastName: data.lastName
+        });
+        await signUp?.prepareEmailAddressVerification({ strategy: 'email_code' });
 
-      await signUp?.create({
-        emailAddress: data.email,
-        password: data.password,
-        firstName: data.firstName,
-        lastName: data.lastName
-      });
-      await signUp?.prepareEmailAddressVerification({ strategy: 'email_code' });
+        toast.success(
+          'We have sent a verification code to your email. Please verify to create your account.',
+          { duration: 5000 }
+        );
 
-      toast.success(
-        'We have sent a verification code to your email. Please verify to create your account.',
-        { duration: 5000 }
-      );
-
-      start(120);
-      setIsPendingVerification(true);
-    } catch (err: any) {
-      setError(err.message || err.errors[0]?.long_message || 'An error occurred during sign up');
-    } finally {
-      setIsLoading(false);
-    }
+        start(120);
+        setIsPendingVerification(true);
+      } catch (err: any) {
+        setError(err.message || err.errors[0]?.long_message || 'An error occurred during sign up');
+      }
+    });
   };
 
   return (
@@ -157,8 +155,8 @@ const Register = () => {
                 {/* Clerk's CAPTCHA widget */}
                 <div id="clerk-captcha" />
 
-                <Button type="submit" fullWidth size="large" disabled={isLoading}>
-                  {isLoading ? 'Creating account...' : 'Create Account'}
+                <Button type="submit" fullWidth size="large" disabled={isPending}>
+                  {isPending ? 'Creating account...' : 'Create Account'}
                 </Button>
               </Stack>
             </form>

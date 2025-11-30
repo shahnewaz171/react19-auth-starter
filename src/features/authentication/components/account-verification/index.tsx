@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Alert, Card, CardContent, Stack, Typography } from '@mui/material';
 import { toast } from 'sonner';
 import { useSignUp } from '@clerk/clerk-react';
@@ -7,6 +7,7 @@ import useDebounce from '@/hooks/useDebounce';
 
 import { Button } from '@/components/ui/Button';
 import OtpInput from '@/components/form/OtpInput';
+import ResendOtp from '@/features/authentication/components/account-verification/ResendOtp';
 
 interface OtpVerificationProps {
   timeLeft: number;
@@ -15,38 +16,39 @@ interface OtpVerificationProps {
 
 const OtpVerification = ({ timeLeft, start }: OtpVerificationProps) => {
   const [error, setError] = useState<string | null>(null);
-  const [isPending, setIsPending] = useState({ otp: false, resendOtp: false });
   const [otp, setOtp] = useState('');
   const navigate = useNavigate();
 
+  const [isPending, startTransition] = useTransition();
   const { isLoaded, signUp, setActive } = useSignUp();
 
-  const debounceCallback = useDebounce(async (value: string) => {
-    await handleOtpVerification(value);
-  }, 500);
+  const handleOtpVerification = (code: string) => {
+    if (!isLoaded || isPending) return;
 
-  const handleOtpVerification = async (code: string) => {
-    if (!isLoaded) return;
-
-    try {
-      setIsPending((prev) => ({ ...prev, otp: true }));
-      const completeSignUp = await signUp.attemptEmailAddressVerification({
-        code
-      });
-
-      if (completeSignUp.status === 'complete') {
-        toast.success('You have successfully verified your account and logged in.', {
-          duration: 3000
+    startTransition(async () => {
+      try {
+        const completeSignUp = await signUp.attemptEmailAddressVerification({
+          code
         });
-        await setActive({ session: completeSignUp.createdSessionId });
-        navigate('/', { replace: true });
+
+        if (completeSignUp.status === 'complete') {
+          toast.success('You have successfully verified your account and logged in.', {
+            duration: 3000
+          });
+          await setActive({ session: completeSignUp.createdSessionId });
+          navigate('/', { replace: true });
+        }
+      } catch (err: any) {
+        setError(
+          err.message || err.errors[0]?.message || 'Failed to verify OTP. Please try again.'
+        );
       }
-    } catch (err: any) {
-      setError(err.message || err.errors[0]?.message || 'Failed to verify OTP. Please try again.');
-    } finally {
-      setIsPending((prev) => ({ ...prev, otp: false }));
-    }
+    });
   };
+
+  const debounceCallback = useDebounce((value: string) => {
+    handleOtpVerification(value);
+  }, 500);
 
   const handleChange = (newValue: string) => {
     setOtp(newValue);
@@ -57,7 +59,7 @@ const OtpVerification = ({ timeLeft, start }: OtpVerificationProps) => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (otp.length < 6) {
@@ -66,27 +68,7 @@ const OtpVerification = ({ timeLeft, start }: OtpVerificationProps) => {
     }
 
     setError(null);
-    await handleOtpVerification(otp);
-  };
-
-  const handleResend = async () => {
-    if (!isLoaded || isPending.resendOtp) return;
-
-    try {
-      setIsPending((prev) => ({ ...prev, resendOtp: true }));
-      await signUp?.prepareEmailAddressVerification({
-        strategy: 'email_code'
-      });
-
-      toast.success('A new OTP has been sent to your email address.', { duration: 3000 });
-      start(120);
-    } catch (err: any) {
-      setError(
-        err.message || err.errors[0]?.long_message || 'Failed to resend OTP. Please try again.'
-      );
-    } finally {
-      setIsPending((prev) => ({ ...prev, resendOtp: false }));
-    }
+    handleOtpVerification(otp);
   };
 
   return (
@@ -117,26 +99,13 @@ const OtpVerification = ({ timeLeft, start }: OtpVerificationProps) => {
               onChange={handleChange}
             />
 
-            <Button type="submit" fullWidth size="large" disabled={isPending.otp}>
-              {isPending.otp ? 'Verifying...' : 'Verify OTP'}
+            <Button type="submit" fullWidth size="large" disabled={isPending}>
+              {isPending ? 'Verifying...' : 'Verify OTP'}
             </Button>
           </Stack>
         </form>
 
-        <Stack alignItems="center" sx={{ mt: 3 }}>
-          {timeLeft ? (
-            <p>Time remaining: {timeLeft} seconds</p>
-          ) : (
-            <Button
-              variant="outlined"
-              size="small"
-              disabled={isPending.resendOtp}
-              onClick={handleResend}
-            >
-              {isPending.resendOtp ? 'Resending...' : 'Resend OTP'}
-            </Button>
-          )}
-        </Stack>
+        <ResendOtp timeLeft={timeLeft} start={start} setError={setError} />
       </CardContent>
     </Card>
   );
