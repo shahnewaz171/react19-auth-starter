@@ -20,7 +20,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': '/src'
+      '@': '/src',
+      'react-dom/client': 'react-dom/profiling'
     }
   },
   build: {

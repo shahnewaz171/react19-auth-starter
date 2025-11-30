@@ -1,8 +1,10 @@
-import { Suspense } from 'react';
+import { Profiler, Suspense } from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { useUser } from '@clerk/clerk-react';
 
 import { AppInitialLoading } from '@/components/loader';
+import { onRender } from '@/utils/profiler';
+
 import AppTopBar from '@/layouts/AppTopBar';
 import Footer from '@/layouts/Footer';
 
@@ -16,7 +18,9 @@ const PrivateLayout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* top bar */}
-      <AppTopBar />
+      <Profiler id="AppTopBar" onRender={onRender}>
+        <AppTopBar />
+      </Profiler>
 
       <main className="grow p-4">
         {/* child routes render here */}

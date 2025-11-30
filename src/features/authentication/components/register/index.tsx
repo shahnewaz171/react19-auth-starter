@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Activity, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Card, CardContent, Link, Stack, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
@@ -86,9 +86,11 @@ const Register = () => {
         py: 4
       }}
     >
-      {isPendingVerification ? (
+      <Activity mode={isPendingVerification ? 'visible' : 'hidden'}>
         <OtpVerification timeLeft={timeLeft} start={start} />
-      ) : (
+      </Activity>
+
+      <Activity mode={isPendingVerification ? 'hidden' : 'visible'}>
         <Card sx={{ maxWidth: 440, width: '100%', mx: 2 }}>
           <CardContent sx={{ p: 4 }}>
             <Typography variant="h4" component="h1" gutterBottom align="center" fontWeight="bold">
@@ -171,7 +173,7 @@ const Register = () => {
             </Box>
           </CardContent>
         </Card>
-      )}
+      </Activity>
     </Box>
   );
 };
