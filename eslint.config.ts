@@ -1,6 +1,7 @@
 import js from '@eslint/js';
 import type { ESLint } from 'eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import reactCompiler from 'eslint-plugin-react-compiler';
 import prettierConfig from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
@@ -45,7 +46,8 @@ export default defineConfig([
       'jsx-a11y': jsxA11y as unknown as ESLint.Plugin,
       prettier: prettier as unknown as ESLint.Plugin,
       import: importPlugin as unknown as ESLint.Plugin,
-      '@typescript-eslint': tsPlugin as unknown as ESLint.Plugin
+      '@typescript-eslint': tsPlugin as unknown as ESLint.Plugin,
+      'react-compiler': reactCompiler as unknown as ESLint.Plugin
     },
     rules: {
       // base recommended rules
@@ -72,6 +74,7 @@ export default defineConfig([
       ],
 
       // typeScript rules
+      'react-compiler/react-compiler': 'error',
       'no-shadow': 'off',
       '@typescript-eslint/no-shadow': 'error',
       'no-unused-vars': 'off',
